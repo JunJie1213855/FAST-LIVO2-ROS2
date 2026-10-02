@@ -1,0 +1,15 @@
+@PACKAGE_INIT@
+
+set_and_check(vikit_common_INCLUDE_DIRS "@PACKAGE_INCLUDE_INSTALL_DIR@")
+set_and_check(vikit_common_LIBRARY_DIRS "@PACKAGE_LIB_INSTALL_DIR@")
+
+find_library(vikit_common_LIBRARIES
+  NAMES vikit_common
+  HINTS "@PACKAGE_LIB_INSTALL_DIR@"
+)
+
+include(FindPackageHandleStandardArgs)
+find_package_handle_standard_args(vikit_common
+  FOUND_VAR vikit_common_FOUND
+  REQUIRED_VARS vikit_common_LIBRARIES vikit_common_INCLUDE_DIRS
+)
