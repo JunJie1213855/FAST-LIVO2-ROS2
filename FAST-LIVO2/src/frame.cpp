@@ -50,7 +50,7 @@ void Frame::initFrame(const cv::Mat &img)
 /// Utility functions for the Frame class
 namespace frame_utils
 {
-
+  // 图像金字塔， FAST_LIVOv2 采用三层金字塔
 void createImgPyramid(const cv::Mat &img_level_0, int n_levels, ImgPyr &pyr)
 {
   pyr.resize(n_levels);

@@ -253,6 +253,7 @@ void ImuProcess::UndistortPcl(LidarMeasureGroup &lidar_meas, StatesGroup &state_
   // printf("[ IMU ] IMU data sequence size: %zu \n", meas.imu.size());
   // printf("[ IMU ] lidar_scan_index_now: %d \n", lidar_meas.lidar_scan_index_now);
 
+  // 查看是传播到 camera image 时间戳还是 lidar 点云帧尾时间戳
   const double prop_end_time = lidar_meas.lio_vio_flg == LIO ? meas.lio_time : meas.vio_time;
 
   /*** cut lidar point based on the propagation-start time and required
@@ -555,12 +556,14 @@ void ImuProcess::Process2(LidarMeasureGroup &lidar_meas, StatesGroup &stat, Poin
 
   MeasureGroup meas = lidar_meas.measures.back();
 
+  // 初始化
   if (imu_need_init)
   {
     double pcl_end_time = lidar_meas.lio_vio_flg == LIO ? meas.lio_time : meas.vio_time;
     // lidar_meas.last_lio_update_time = pcl_end_time;
 
     if (meas.imu.empty()) { return; };
+
     /// The very first lidar frame
     IMU_init(meas, stat, init_iter_num);
 
@@ -585,6 +588,7 @@ void ImuProcess::Process2(LidarMeasureGroup &lidar_meas, StatesGroup &stat, Poin
     return;
   }
 
+  // 点云去畸变
   UndistortPcl(lidar_meas, stat, *cur_pcl_un_);
   // cout << "[ IMU ] undistorted point num: " << cur_pcl_un_->size() << endl;
 }

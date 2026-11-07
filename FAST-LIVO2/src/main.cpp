@@ -11,6 +11,9 @@ int main(int argc, char **argv)
   image_transport::ImageTransport it_(nh);
   LIVMapper mapper(nh, "laserMapping", options);
   mapper.initializeSubscribersAndPublishers(nh, it_);
+
+  // 循环运行
+  // 数据同步 -> imu 前向传播 -> 点云去畸变 -> lio 状态更新 -> 图像块匹配 -> vio 状态更新 -> 地图更新
   mapper.run(nh);
   rclcpp::shutdown();
   return 0;

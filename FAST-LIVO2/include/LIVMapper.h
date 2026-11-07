@@ -32,29 +32,61 @@ class LIVMapper
 public:
   LIVMapper(rclcpp::Node::SharedPtr &node, std::string node_name, const rclcpp::NodeOptions & options = rclcpp::NodeOptions());
   ~LIVMapper();
+  // 初始化发布者和订阅者
   void initializeSubscribersAndPublishers(rclcpp::Node::SharedPtr &nh, image_transport::ImageTransport &it_);
+
+  // 初始化各个部件
   void initializeComponents(rclcpp::Node::SharedPtr &node);
   void initializeFiles();
   void run(rclcpp::Node::SharedPtr &node);
+
+  // 重力对齐
   void gravityAlignment();
+
+  // 第一帧处理
   void handleFirstFrame();
+
+  // 状态估计更新和地图更新
   void stateEstimationAndMapping();
+
+  // vio 处理
   void handleVIO();
+
+  // lio 处理
   void handleLIO();
-  void savePCD();
-  void processImu();
   
+
+  // 前向传播 imu 以及反向去畸变
+  void processImu();
+
+  // 数据同步对齐
   bool sync_packages(LidarMeasureGroup &meas);
+
+  // 前向传播一次 imu 数据
   void prop_imu_once(StatesGroup &imu_prop_state, const double dt, V3D acc_avr, V3D angvel_avr);
   void imu_prop_callback();
+
+  // 
   void transformLidar(const Eigen::Matrix3d rot, const Eigen::Vector3d t, const PointCloudXYZI::Ptr &input_cloud, PointCloudXYZI::Ptr &trans_cloud);
+  
   void pointBodyToWorld(const PointType &pi, PointType &po);
  
   void RGBpointBodyToWorld(PointType const *const pi, PointType *const po);
+  
+  // 点云保存
+  void savePCD();
+
+  // 不同雷达的回调函数
   void standard_pcl_cbk(const sensor_msgs::msg::PointCloud2::ConstSharedPtr &msg);
   void livox_pcl_cbk(const livox_ros_driver2::msg::CustomMsg::ConstSharedPtr &msg_in);
+
+  // imu 回调
   void imu_cbk(const sensor_msgs::msg::Imu::ConstSharedPtr &msg_in);
+
+  // camera img 回调
   void img_cbk(const sensor_msgs::msg::Image::ConstSharedPtr &msg_in);
+
+  // 各种 publisher
   void publish_img_rgb(const image_transport::Publisher &pubImage, VIOManagerPtr vio_manager);
   void publish_frame_world(const rclcpp::Publisher<sensor_msgs::msg::PointCloud2>::SharedPtr &pubLaserCloudFullRes, VIOManagerPtr vio_manager);
   void publish_visual_sub_map(const rclcpp::Publisher<sensor_msgs::msg::PointCloud2>::SharedPtr &pubSubVisualMap);
@@ -62,10 +94,17 @@ public:
   void publish_odometry(const rclcpp::Publisher<nav_msgs::msg::Odometry>::SharedPtr &pmavros_pose_publisherubOdomAftMapped);
   void publish_mavros(const rclcpp::Publisher<geometry_msgs::msg::PoseStamped>::SharedPtr &mavros_pose_publisher);
   void publish_path(const rclcpp::Publisher<nav_msgs::msg::Path>::SharedPtr &pubPath);
+
+  // 参数服务器的参数初始化
   void readParameters(rclcpp::Node::SharedPtr &node);
   template <typename T> void set_posestamp(T &out);
+
+  // 机体系到全局系点云输出
   template <typename T> void pointBodyToWorld(const Eigen::Matrix<T, 3, 1> &pi, Eigen::Matrix<T, 3, 1> &po);
+
   template <typename T> Eigen::Matrix<T, 3, 1> pointBodyToWorld(const Eigen::Matrix<T, 3, 1> &pi);
+  
+  // 从 msg 中反序列化 image
   cv::Mat getImageFromMsg(const sensor_msgs::msg::Image::ConstSharedPtr &img_msg);
 
   std::mutex mtx_buffer, mtx_buffer_imu_prop;
