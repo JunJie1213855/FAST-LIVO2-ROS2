@@ -1,3 +1,7 @@
+# 内存管理修复
+
+内存限制、行为变化和回归测试见 [MEMORY.md](MEMORY.md)。
+
 # FAST-LIVO2 ROS2 HUMBLE
 
 ## FAST-LIVO2: Fast, Direct LiDAR-Inertial-Visual Odometry

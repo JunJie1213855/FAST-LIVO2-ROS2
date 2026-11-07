@@ -18,6 +18,8 @@ which is included as part of this source code package.
 #include <opencv2/imgproc/imgproc_c.h>
 #include <pcl/filters/voxel_grid.h>
 #include <set>
+#include <memory>
+#include <cstddef>
 #include <vikit/math_utils.h>
 #include <vikit/robust_cost.h>
 #include <vikit/vision.h>
@@ -70,7 +72,10 @@ class VOXEL_POINTS
 public:
   std::vector<VisualPoint *> voxel_points;
   int count;
-  VOXEL_POINTS(int num) : count(num) {}
+  int last_used_frame = 0;
+  explicit VOXEL_POINTS(int num) : count(num) {}
+  VOXEL_POINTS(const VOXEL_POINTS &) = delete;
+  VOXEL_POINTS &operator=(const VOXEL_POINTS &) = delete;
   ~VOXEL_POINTS() 
   { 
     for (VisualPoint* vp : voxel_points) 
@@ -84,8 +89,8 @@ class VIOManager
 {
 public:
   int grid_size;
-  vk::AbstractCamera *cam;
-  vk::PinholeCamera *pinhole_cam;
+  vk::AbstractCamera *cam = nullptr;  // Non-owning alias of camera_.
+  vk::PinholeCamera *pinhole_cam = nullptr;
   StatesGroup *state;
   StatesGroup *state_propagat;
   M3D Rli, Rci, Rcl, Rcw, Jdphi_dR, Jdp_dt, Jdp_dR;
@@ -107,8 +112,8 @@ public:
   int max_iterations, total_points;
 
   double img_point_cov, outlier_threshold, ncc_thre;
-  
-  SubSparseMap *visual_submap;
+
+  std::unique_ptr<SubSparseMap> visual_submap;
   std::vector<std::vector<V3D>> rays_with_sample_points;
 
   double compute_jacobian_time, update_ekf_time;
@@ -123,9 +128,9 @@ public:
   Eigen::MatrixXd K, H_sub_inv;
 
   ofstream fout_camera, fout_colmap;
-  unordered_map<VOXEL_LOCATION, VOXEL_POINTS *> feat_map;
-  unordered_map<VOXEL_LOCATION, int> sub_feat_map; 
-  unordered_map<int, Warp *> warp_map;
+  unordered_map<VOXEL_LOCATION, std::unique_ptr<VOXEL_POINTS>> feat_map;
+  unordered_map<VOXEL_LOCATION, int> sub_feat_map;
+  unordered_map<int, Warp> warp_map;
   vector<VisualPoint *> retrieve_voxel_points;
   vector<pointWithVar> append_voxel_points;
   FramePtr new_frame_;
@@ -138,7 +143,18 @@ public:
     TYPE_UNKNOWN
   };
 
+  // Zero disables the corresponding map retention limit.
+  std::size_t max_visual_points = 20000;
+  std::size_t max_points_per_voxel = 32;
+  int max_reference_frames = 200;
+  double visual_map_radius = 200.0;
+
   VIOManager();
+  VIOManager(const VIOManager &) = delete;
+  VIOManager &operator=(const VIOManager &) = delete;
+  void setCamera(std::unique_ptr<vk::AbstractCamera> camera);
+  // Called only between frames, after invalidating all borrowed map-point pointers.
+  void pruneVisualMap();
   ~VIOManager();
   void updateStateInverse(cv::Mat img, int level);
   void updateState(cv::Mat img, int level);
@@ -160,7 +176,7 @@ public:
                                      const V3D &xyz_ref, const V3D &normal_ref, const SE3 &T_cur_ref, const int level_ref, Matrix2d &A_cur_ref);
   void warpAffine(const Matrix2d &A_cur_ref, const cv::Mat &img_ref, const Vector2d &px_ref, const int level_ref, const int search_level,
                   const int pyramid_level, const int halfpatch_size, float *patch);
-  void insertPointIntoVoxelMap(VisualPoint *pt_new);
+  void insertPointIntoVoxelMap(std::unique_ptr<VisualPoint> point);
   void plotTrackedPoints();
   void updateFrameState(StatesGroup state);
   void projectPatchFromRefToCur(const unordered_map<VOXEL_LOCATION, VoxelOctoTree *> &plane_map);
@@ -170,7 +186,10 @@ public:
   double calculateNCC(float *ref_patch, float *cur_patch, int patch_size);
   int getBestSearchLevel(const Matrix2d &A_cur_ref, const int max_level);
   V3F getInterpolatedPixel(cv::Mat img, V2D pc);
-  
+
+private:
+  std::unique_ptr<vk::AbstractCamera> camera_;
+
   // void resetRvizDisplay();
   // deque<VisualPoint *> map_cur_frame;
   // deque<VisualPoint *> sub_map_ray;

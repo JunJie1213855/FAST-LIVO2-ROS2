@@ -34,7 +34,7 @@ public:
   bool is_converged_;           //!< True if the point is converged.
   bool is_normal_initialized_;  //!< True if the normal is initialized.
   bool has_ref_patch_;          //!< True if the point has a reference patch.
-  Feature *ref_patch;           //!< Reference patch of the point.
+  Feature *ref_patch = nullptr;  //!< Reference patch of the point.
 
   VisualPoint(const Vector3d &pos);
   ~VisualPoint();

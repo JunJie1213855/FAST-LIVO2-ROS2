@@ -1,5 +1,17 @@
 /laserMapping:
   ros__parameters:
+    # Limits apply to active data; zero disables only a visual-map retention limit.
+    memory:
+      max_lidar_buffer: 30
+      max_image_buffer: 10
+      max_imu_buffer: 1000
+      max_buffer_duration: 3.0 # Seconds, independently for each sensor.
+      max_path_poses: 10000
+      max_visual_points: 20000
+      max_visual_points_per_voxel: 32
+      max_reference_frames: 200
+      visual_map_radius: 200.0 # Meters.
+
     common:
       img_topic: "/left_camera/image"
       lid_topic: "/livox/lidar"
@@ -61,7 +73,7 @@
       layer_init_num: [5, 5, 5, 5, 5]
 
     local_map:  
-      map_sliding_en: false
+      map_sliding_en: true
       half_map_size: 100
       sliding_thresh: 8.0
 
@@ -83,8 +95,9 @@
     pcd_save:
       pcd_save_en: true
       colmap_output_en: false # need to set interval = -1
+      max_points: 2000000 # Flush a chunk before this point-count limit is exceeded.
       filter_size_pcd: 0.15
-      interval: -1
+      interval: 100
       # how many LiDAR frames saved in each pcd file;
       # -1 : all frames will be saved in ONE pcd file, may lead to memory crash when having too much frames.
 

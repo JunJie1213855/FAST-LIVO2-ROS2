@@ -131,11 +131,13 @@ class VoxelOctoTree
 
 public:
   VoxelOctoTree() = default;
+  VoxelOctoTree(const VoxelOctoTree &) = delete;
+  VoxelOctoTree &operator=(const VoxelOctoTree &) = delete;
   std::vector<pointWithVar> temp_points_;
-  VoxelPlane *plane_ptr_;
+  VoxelPlane *plane_ptr_ = nullptr;
   int layer_;
   int octo_state_; // 0 is end of tree, 1 is not
-  VoxelOctoTree *leaves_[8];
+  VoxelOctoTree *leaves_[8] = {};
   double voxel_center_[3]; // x, y, z
   std::vector<int> layer_init_num_;
   float quater_length_;
@@ -188,6 +190,13 @@ class VoxelMapManager
 {
 public:
   VoxelMapManager() = default;
+  VoxelMapManager(const VoxelMapManager &) = delete;
+  VoxelMapManager &operator=(const VoxelMapManager &) = delete;
+  ~VoxelMapManager()
+  {
+    for (const auto &voxel : voxel_map_)
+      delete voxel.second;
+  }
   VoxelMapConfig config_setting_;
   int current_frame_id_ = 0;
   rclcpp::Publisher<visualization_msgs::msg::MarkerArray>::SharedPtr voxel_map_pub_;
@@ -217,8 +226,7 @@ public:
   std::vector<pointWithVar> pv_list_;
   std::vector<PointToPlane> ptpl_list_;
 
-  VoxelMapManager(VoxelMapConfig &config_setting, std::unordered_map<VOXEL_LOCATION, VoxelOctoTree *> &voxel_map)
-      : config_setting_(config_setting), voxel_map_(voxel_map)
+  explicit VoxelMapManager(const VoxelMapConfig &config_setting) : config_setting_(config_setting)
   {
     current_frame_id_ = 0;
     feats_undistort_.reset(new PointCloudXYZI());

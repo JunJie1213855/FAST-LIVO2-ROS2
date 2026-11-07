@@ -14,6 +14,8 @@ which is included as part of this source code package.
 #define LIV_MAPPER_H
 
 #include "IMU_Processing.h"
+
+#include <cstddef>
 #include "vio.h"
 #include "preprocess.h"
 #ifdef PRE_ROS_IRON
@@ -130,7 +132,7 @@ public:
   double match_time = 0, solve_time = 0, solve_const_H_time = 0;
 
   bool lidar_map_inited = false, pcd_save_en = false, pub_effect_point_en = false, pose_output_en = false, ros_driver_fix_en = false;
-  int pcd_save_interval = -1, pcd_index = 0;
+  int pcd_save_interval = 100, pcd_index = 0;
   int pub_scan_num = 1;
 
   StatesGroup imu_propagate, latest_ekf_state;
@@ -228,5 +230,23 @@ public:
   double aver_time_icp = 0;
   double aver_time_map_inre = 0;
   bool colmap_output_en = false;
+
+private:
+  void trimSensorBuffers();  // Requires mtx_buffer.
+  void resetPendingMeasurements();
+  void flushPCD();
+  template <typename CloudT>
+  void appendPCD(const CloudT &cloud, CloudT *pending);
+
+  std::size_t max_lidar_buffer_size_ = 30;
+  std::size_t max_image_buffer_size_ = 10;
+  std::size_t max_imu_buffer_size_ = 1000;
+  double max_buffer_duration_ = 3.0;
+  std::size_t max_path_poses_ = 10000;
+  std::size_t max_pcd_points_ = 2000000;
+  std::string pcd_output_directory_;
+  int pcd_scan_count_ = 0;
+  int publish_scan_count_ = 0;
 };
+
 #endif

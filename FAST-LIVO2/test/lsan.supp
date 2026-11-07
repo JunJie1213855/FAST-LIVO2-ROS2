@@ -1,0 +1,2 @@
+# Ubuntu OpenCV's legacy TBB scheduler retains three small process-lifetime allocations.
+leak:libtbb.so.2

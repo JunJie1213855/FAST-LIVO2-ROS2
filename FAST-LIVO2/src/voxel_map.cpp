@@ -11,6 +11,7 @@ which is included as part of this source code package.
 */
 
 #include "voxel_map.h"
+#include "parameter_utils.h"
 using namespace Eigen;
 void calcBodyCov(Eigen::Vector3d &pb, const float range_inc, const float degree_inc, Eigen::Matrix3d &cov)
 {
@@ -36,56 +37,33 @@ void calcBodyCov(Eigen::Vector3d &pb, const float range_inc, const float degree_
 void loadVoxelConfig(rclcpp::Node::SharedPtr &node, VoxelMapConfig &voxel_config)
 {
   // helper: declare if not declared, otherwise get
-  auto try_declare = [node]<typename ParameterT>(
-      const std::string &name, const ParameterT &default_value)
-  {
-    if (!node->has_parameter(name)) {
-      return node->declare_parameter<ParameterT>(name, default_value);
-    } else {
-      return node->get_parameter(name).get_value<ParameterT>();
-    }
-  };
 
   // declare/get parameters with YAML override support
-  voxel_config.is_pub_plane_map_ =
-      try_declare.template operator()<bool>("publish.pub_plane_en", false);
+  voxel_config.is_pub_plane_map_ = fast_livo::GetOrDeclareParameter<bool>(node, "publish.pub_plane_en", false);
 
-  voxel_config.max_layer_ =
-      try_declare.template operator()<int>("lio.max_layer", 1);
+  voxel_config.max_layer_ = fast_livo::GetOrDeclareParameter<int>(node, "lio.max_layer", 1);
 
-  voxel_config.max_voxel_size_ =
-      try_declare.template operator()<double>("lio.voxel_size", 0.5);
+  voxel_config.max_voxel_size_ = fast_livo::GetOrDeclareParameter<double>(node, "lio.voxel_size", 0.5);
 
-  voxel_config.planner_threshold_ =
-      try_declare.template operator()<double>("lio.min_eigen_value", 0.01);
+  voxel_config.planner_threshold_ = fast_livo::GetOrDeclareParameter<double>(node, "lio.min_eigen_value", 0.01);
 
-  voxel_config.sigma_num_ =
-      try_declare.template operator()<double>("lio.sigma_num", 3);
+  voxel_config.sigma_num_ = fast_livo::GetOrDeclareParameter<double>(node, "lio.sigma_num", 3);
 
-  voxel_config.beam_err_ =
-      try_declare.template operator()<double>("lio.beam_err", 0.02);
+  voxel_config.beam_err_ = fast_livo::GetOrDeclareParameter<double>(node, "lio.beam_err", 0.02);
 
-  voxel_config.dept_err_ =
-      try_declare.template operator()<double>("lio.dept_err", 0.05);
+  voxel_config.dept_err_ = fast_livo::GetOrDeclareParameter<double>(node, "lio.dept_err", 0.05);
 
-  voxel_config.layer_init_num_ =
-      try_declare.template operator()<std::vector<int64_t>>(
-          "lio.layer_init_num", {5, 5, 5, 5, 5});
+  voxel_config.layer_init_num_ = fast_livo::GetOrDeclareParameter<std::vector<int64_t>>(node, "lio.layer_init_num", {5, 5, 5, 5, 5});
 
-  voxel_config.max_points_num_ =
-      try_declare.template operator()<int>("lio.max_points_num", 50);
+  voxel_config.max_points_num_ = fast_livo::GetOrDeclareParameter<int>(node, "lio.max_points_num", 50);
 
-  voxel_config.max_iterations_ =
-      try_declare.template operator()<int>("lio.min_iterations", 5);
+  voxel_config.max_iterations_ = fast_livo::GetOrDeclareParameter<int>(node, "lio.min_iterations", 5);
 
-  voxel_config.map_sliding_en =
-      try_declare.template operator()<bool>("local_map.map_sliding_en", false);
+  voxel_config.map_sliding_en = fast_livo::GetOrDeclareParameter<bool>(node, "local_map.map_sliding_en", false);
 
-  voxel_config.half_map_size =
-      try_declare.template operator()<int>("local_map.half_map_size", 100);
+  voxel_config.half_map_size = fast_livo::GetOrDeclareParameter<int>(node, "local_map.half_map_size", 100);
 
-  voxel_config.sliding_thresh =
-      try_declare.template operator()<double>("local_map.sliding_thresh", 8.0);
+  voxel_config.sliding_thresh = fast_livo::GetOrDeclareParameter<double>(node, "local_map.sliding_thresh", 8.0);
 
   // get parameter
   node->get_parameter("publish.pub_plane_en", voxel_config.is_pub_plane_map_);
@@ -843,12 +821,12 @@ void VoxelMapManager::pubVoxelMap()
   rclcpp::Rate loop(500);
   float use_alpha = 0.8;
   visualization_msgs::msg::MarkerArray voxel_plane;
-  voxel_plane.markers.reserve(1000000);
   std::vector<VoxelPlane> pub_plane_list;
   for (auto iter = voxel_map_.begin(); iter != voxel_map_.end(); iter++)
   {
     GetUpdatePlane(iter->second, config_setting_.max_layer_, pub_plane_list);
   }
+  voxel_plane.markers.reserve(pub_plane_list.size());
   for (size_t i = 0; i < pub_plane_list.size(); i++)
   {
     V3D plane_cov = pub_plane_list[i].plane_var_.block<3, 3>(0, 0).diagonal();

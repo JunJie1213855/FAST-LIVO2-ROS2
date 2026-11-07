@@ -5,13 +5,19 @@ if(POLICY CMP0074)
   cmake_policy(SET CMP0074 NEW)
 endif()
 
-set(CMAKE_BUILD_TYPE "Release")
+if(NOT CMAKE_BUILD_TYPE)
+  set(CMAKE_BUILD_TYPE Release CACHE STRING "Build type" FORCE)
+endif()
 message(STATUS "Build Type: ${CMAKE_BUILD_TYPE}")
 
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
-set(CMAKE_SKIP_BUILD_RPATH TRUE)
+option(FAST_LIVO_ENABLE_SANITIZERS "Enable AddressSanitizer and LeakSanitizer" OFF)
+if(FAST_LIVO_ENABLE_SANITIZERS)
+  add_compile_options(-fsanitize=address -fno-omit-frame-pointer)
+  add_link_options(-fsanitize=address)
+endif()
 
 IF("$ENV{ROS_DISTRO}" STRLESS "iron")
   add_definitions(-DPRE_ROS_IRON)
@@ -192,7 +198,7 @@ target_link_libraries(fastlivo_mapping
 )
 
 # Link mimalloc if found
-if(mimalloc_FOUND)
+if(mimalloc_FOUND AND NOT FAST_LIVO_ENABLE_SANITIZERS)
   target_link_libraries(fastlivo_mapping mimalloc)
 endif()
 
@@ -206,6 +212,8 @@ install(
   DIRECTORY config launch rviz_cfg
   DESTINATION share/${PROJECT_NAME}
 )
+
+install(FILES MEMORY.md DESTINATION share/${PROJECT_NAME})
 
 # Export dependencies
 ament_export_dependencies(
@@ -224,4 +232,18 @@ ament_export_dependencies(
   Sophus
 )
 
+if(BUILD_TESTING)
+  find_package(ament_cmake_gtest REQUIRED)
+  ament_add_gtest(test_visual_memory test/test_visual_memory.cpp)
+  ament_target_dependencies(test_visual_memory ${dependencies})
+  target_link_libraries(test_visual_memory vio lio ${PCL_LIBRARIES} ${OpenCV_LIBS} ${Sophus_LIBRARIES} ${vikit_common_LIBRARIES})
+  ament_add_gtest(test_mapper_memory test/test_mapper_memory.cpp)
+  ament_target_dependencies(test_mapper_memory ${dependencies})
+  target_link_libraries(test_mapper_memory laser_mapping vio lio pre imu_proc
+    ${PCL_LIBRARIES} ${OpenCV_LIBS} ${Sophus_LIBRARIES} ${Boost_LIBRARIES})
+  if(FAST_LIVO_ENABLE_SANITIZERS)
+    set_tests_properties(test_visual_memory test_mapper_memory PROPERTIES
+      ENVIRONMENT "ASAN_OPTIONS=detect_leaks=1;LSAN_OPTIONS=suppressions=${CMAKE_CURRENT_SOURCE_DIR}/test/lsan.supp")
+  endif()
+endif()
 ament_package()
