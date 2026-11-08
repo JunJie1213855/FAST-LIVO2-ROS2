@@ -124,7 +124,9 @@ typedef struct pointWithVar
   };
 } pointWithVar;
 
-
+// 状态群
+// 状态有19个自由度：旋转、平移、速度、角速度零偏、加速度零偏、重力、逆曝光时间
+// 西方差
 struct StatesGroup
 {
   StatesGroup()
@@ -181,6 +183,7 @@ struct StatesGroup
     return a;
   };
 
+  // + 法重载，注意看旋转
   StatesGroup &operator+=(const Matrix<double, DIM_STATE, 1> &state_add)
   {
     this->rot_end = this->rot_end * Exp(state_add(0, 0), state_add(1, 0), state_add(2, 0));
@@ -192,7 +195,7 @@ struct StatesGroup
     this->gravity += state_add.block<3, 1>(16, 0);
     return *this;
   };
-
+  // - 法重载，注意看旋转
   Matrix<double, DIM_STATE, 1> operator-(const StatesGroup &b)
   {
     Matrix<double, DIM_STATE, 1> a;
@@ -207,6 +210,7 @@ struct StatesGroup
     return a;
   };
 
+  // 重置位姿
   void resetpose()
   {
     this->rot_end = M3D::Identity();

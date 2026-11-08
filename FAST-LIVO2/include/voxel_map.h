@@ -209,8 +209,11 @@ public:
   VoxelMapConfig config_setting_;
   int current_frame_id_ = 0;
   rclcpp::Publisher<visualization_msgs::msg::MarkerArray>::SharedPtr voxel_map_pub_;
+
+  // 体素图
   std::unordered_map<VOXEL_LOCATION, VoxelOctoTree *> voxel_map_;
 
+  // 特征点
   PointCloudXYZI::Ptr feats_undistort_;
   PointCloudXYZI::Ptr feats_down_body_;
   PointCloudXYZI::Ptr feats_down_world_;
@@ -221,6 +224,8 @@ public:
   float ave_build_residual_time = 0.0;
   float ave_ekf_time = 0.0;
   int scan_count = 0;
+
+  // 状态
   StatesGroup state_;
   V3D position_last_;
 

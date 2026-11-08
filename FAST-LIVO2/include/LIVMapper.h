@@ -112,11 +112,17 @@ public:
   std::mutex mtx_buffer, mtx_buffer_imu_prop;
   std::condition_variable sig_buffer;
 
+  // slam 模式枚举
   SLAM_MODE slam_mode_;
+
+  // 点云体素地图
   std::unordered_map<VOXEL_LOCATION, VoxelOctoTree *> voxel_map;
-  
+  // 根目录
   string root_dir;
+  // lidar、imu、image 话题名称
   string lid_topic, imu_topic, seq_name, img_topic;
+
+  // 外参
   V3D extT;
   M3D extR;
 
@@ -138,7 +144,10 @@ public:
   StatesGroup imu_propagate, latest_ekf_state;
 
   bool new_imu = false, state_update_flg = false, imu_prop_enable = true, ekf_finish_once = false;
+
+  // 前向传播的 imu 缓冲数据
   deque<sensor_msgs::msg::Imu> prop_imu_buffer;
+  // 最新的 imu 数据
   sensor_msgs::msg::Imu newest_imu;
   double latest_ekf_time;
   nav_msgs::msg::Odometry imu_prop_odom;
@@ -202,9 +211,14 @@ public:
 
   PreprocessPtr p_pre;
   ImuProcessPtr p_imu;
+
+  // lio 体素地图管理
   VoxelMapManagerPtr voxelmap_manager;
+
+  // vio 体素管理
   VIOManagerPtr vio_manager;
 
+  // ros
   rclcpp::Publisher<visualization_msgs::msg::Marker>::SharedPtr plane_pub;
   rclcpp::Publisher<visualization_msgs::msg::MarkerArray>::SharedPtr voxel_pub;
   std::shared_ptr<rclcpp::SubscriptionBase> sub_pcl;

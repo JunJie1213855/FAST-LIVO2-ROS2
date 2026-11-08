@@ -380,6 +380,8 @@ void VoxelMapManager::StateEstimation(StatesGroup &state_propagat)
     V3D point_this(feats_down_body_->points[i].x, feats_down_body_->points[i].y, feats_down_body_->points[i].z);
     if (point_this[2] == 0) { point_this[2] = 0.001; }
     M3D var;
+
+    // 计算机体系的三维点协方差
     calcBodyCov(point_this, config_setting_.dept_err_, config_setting_.beam_err_, var);
     body_cov_list_.push_back(var);
     point_this = extR_ * point_this + extT_;
@@ -421,6 +423,7 @@ void VoxelMapManager::StateEstimation(StatesGroup &state_propagat)
 
     // double t1 = omp_get_wtime();
 
+    // 通过 openmp 构造残差
     BuildResidualListOMP(pv_list_, ptpl_list_);
 
     // build_residual_time += omp_get_wtime() - t1;
@@ -470,7 +473,7 @@ void VoxelMapManager::StateEstimation(StatesGroup &state_propagat)
       // var = state_propagat.rot_end * extR_ * ptpl_list_[i].body_cov_ * (state_propagat.rot_end * extR_).transpose() +
       //       state_propagat.cov.block<3, 3>(3, 3) - point_crossmat * state_propagat.cov.block<3, 3>(0, 0) * point_crossmat;
 
-      // point_body cov
+      // 三维点世界系协方差
       var = state_propagat.rot_end * extR_ * ptpl_list_[i].body_cov_ * (state_propagat.rot_end * extR_).transpose();
 
       double sigma_l = J_nq * ptpl_list_[i].plane_var_ * J_nq.transpose();
@@ -500,6 +503,7 @@ void VoxelMapManager::StateEstimation(StatesGroup &state_propagat)
     VD(DIM_STATE)
     solution = K_1.block<DIM_STATE, 6>(0, 0) * HTz + vec.block<DIM_STATE, 1>(0, 0) - G.block<DIM_STATE, 6>(0, 0) * vec.block<6, 1>(0, 0);
     int minRow, minCol;
+    // 增量
     state_ += solution;
     auto rot_add = solution.block<3, 1>(0, 0);
     auto t_add = solution.block<3, 1>(3, 0);
