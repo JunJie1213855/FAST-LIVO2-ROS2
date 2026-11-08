@@ -126,8 +126,10 @@ public:
   double img_point_cov, outlier_threshold, ncc_thre;
 
   // 视觉子图
+  // 本帧筛选出来、用于计算光度误差和更新状态的一组视觉观测数据
   std::unique_ptr<SubSparseMap> visual_submap;
-  // 采样点的射线参数
+
+  // 图像网格中心对应的一条视线，以及沿这条视线预先采样的三维点。 它用于补充搜索地图。
   std::vector<std::vector<V3D>> rays_with_sample_points;
 
   double compute_jacobian_time, update_ekf_time;
@@ -154,7 +156,7 @@ public:
   // 它主要根据本次激光点 pg 建立，用于去 feat_map 中查找历史视觉点，本身不保存地图点或图像。
   unordered_map<VOXEL_LOCATION, int> sub_feat_map;
 
-  //
+  // 图像块变形参数的缓存，用来避免重复计算仿射矩阵和采样层级。
   unordered_map<int, Warp> warp_map;
 
   // 检索到的体素三维点

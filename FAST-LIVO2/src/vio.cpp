@@ -131,21 +131,28 @@ void VIOManager::initializeVIO()
 {
   visual_submap->reset();
 
+  // 基础参数
   fx = cam->fx();
   fy = cam->fy();
   cx = cam->cx();
   cy = cam->cy();
+
+  // 相机尺度
   image_resize_factor = cam->scale();
 
   printf("intrinsic: %.6lf, %.6lf, %.6lf, %.6lf\n", fx, fy, cx, cy);
 
+  // 相机尺寸
   width = cam->width();
   height = cam->height();
 
   printf("width: %d, height: %d, scale: %f\n", width, height, image_resize_factor);
+
+  // cam2imu 的外参
   Rci = Rcl * Rli;
   Pci = Rcl * Pli + Pcl;
 
+  // 雅可比缓存
   V3D Pic;
   M3D tmp;
   Jdphi_dR = Rci;
@@ -153,6 +160,7 @@ void VIOManager::initializeVIO()
   tmp << SKEW_SYM_MATRX(Pic);
   Jdp_dR = -Rci * tmp;
 
+  // 网格尺寸
   if (grid_size > 10)
   {
     grid_n_width = ceil(static_cast<double>(width / grid_size));
@@ -164,8 +172,10 @@ void VIOManager::initializeVIO()
     grid_n_height = ceil(static_cast<double>(height / grid_size));
     grid_n_width = ceil(static_cast<double>(width / grid_size));
   }
+  // 网格的整体长度
   length = grid_n_width * grid_n_height;
 
+  // 射线跟踪
   if(raycast_en)
   {
     // cv::Mat img_test = cv::Mat::zeros(height, width, CV_8UC1);
@@ -214,6 +224,7 @@ void VIOManager::initializeVIO()
     // cv::waitKey(1);
   }
 
+  // colmap 输出格式
   if(colmap_output_en)
   {
     pinhole_cam = dynamic_cast<vk::PinholeCamera*>(cam);
@@ -230,12 +241,15 @@ void VIOManager::initializeVIO()
         << cx << " " << cy << std::endl;
     fout_camera.close();
   }
+
+  // 网格
   grid_num.resize(length);
   map_index.resize(length);
   map_dist.resize(length);
   update_flag.resize(length);
   scan_value.resize(length);
 
+  // 图像块信息
   patch_size_total = patch_size * patch_size;
   patch_size_half = static_cast<int>(patch_size / 2);
   patch_buffer.resize(patch_size_total);
