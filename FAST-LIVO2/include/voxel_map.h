@@ -32,6 +32,7 @@ which is included as part of this source code package.
 
 static int voxel_plane_id = 0;
 
+// voxelmap
 typedef struct VoxelMapConfig
 {
   double max_voxel_size_;
@@ -51,6 +52,7 @@ typedef struct VoxelMapConfig
   int half_map_size;
 } VoxelMapConfig;
 
+// 点到平面
 typedef struct PointToPlane
 {
   Eigen::Vector3d point_b_;
@@ -66,6 +68,7 @@ typedef struct PointToPlane
   float dis_to_plane_;
 } PointToPlane;
 
+// 体素平面
 typedef struct VoxelPlane
 {
   Eigen::Vector3d center_;
@@ -93,6 +96,7 @@ typedef struct VoxelPlane
   }
 } VoxelPlane;
 
+// 体素索引，基于三维点的整数索引
 class VOXEL_LOCATION
 {
 public:
@@ -106,6 +110,7 @@ public:
 // Hash value
 namespace std
 {
+// 基于三维体素整数索引的哈希映射
 template <> struct hash<VOXEL_LOCATION>
 {
   int64_t operator()(const VOXEL_LOCATION &s) const
@@ -117,6 +122,7 @@ template <> struct hash<VOXEL_LOCATION>
 };
 } // namespace std
 
+// 点信息
 struct DS_POINT
 {
   float xyz[3];
@@ -124,8 +130,11 @@ struct DS_POINT
   int count = 0;
 };
 
+// 机体系协方差
 void calcBodyCov(Eigen::Vector3d &pb, const float range_inc, const float degree_inc, Eigen::Matrix3d &cov);
 
+
+// 体素八叉树
 class VoxelOctoTree
 {
 

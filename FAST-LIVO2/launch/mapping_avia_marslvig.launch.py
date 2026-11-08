@@ -54,18 +54,6 @@ def generate_launch_description():
         camera_config_arg,
         use_respawn_arg,
 
-        # use parameter_blackboard as global parameters server and load camera params
-        Node(
-            package='demo_nodes_cpp',
-            executable='parameter_blackboard',
-            name='parameter_blackboard',
-            # namespace='laserMapping',
-            parameters=[
-                camera_params_file,
-            ],
-            output='screen'
-        ),
-
         # republish compressed image to raw image
         # https://robotics.stackexchange.com/questions/110939/how-do-i-remap-compressed-video-to-raw-video-in-ros2
         # ros2 run image_transport republish compressed raw --ros-args --remap in:=/left_camera/image --remap out:=/left_camera/image
@@ -78,7 +66,7 @@ def generate_launch_description():
                 'raw',
             ],
             remappings=[
-                ("in",  "/left_camera/image"), 
+                ("in/compressed", "/left_camera/image/compressed"),
                 ("out", "/left_camera/image")
             ],
             output="screen",

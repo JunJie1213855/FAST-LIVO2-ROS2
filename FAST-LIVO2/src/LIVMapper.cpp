@@ -265,6 +265,7 @@ void LIVMapper::initializeComponents(rclcpp::Node::SharedPtr &node)
       throw std::invalid_argument(name + " cannot be negative");
     return value;
   };
+  // 限制
   vio_manager->max_visual_points = map_limit("memory.max_visual_points", 20000);
   vio_manager->max_points_per_voxel = map_limit("memory.max_visual_points_per_voxel", 32);
   vio_manager->max_reference_frames = map_limit("memory.max_reference_frames", 200);
@@ -305,13 +306,13 @@ void LIVMapper::initializeComponents(rclcpp::Node::SharedPtr &node)
 
   // 部分选型
   if (!imu_en)
-    p_imu->disable_imu();  // 是否使用 imu
+    p_imu->disable_imu();          // 是否使用 imu
   if (!gravity_est_en)
     p_imu->disable_gravity_est();  // 是否进行重力对齐
   if (!ba_bg_est_en)
-    p_imu->disable_bias_est();  // 是否估计零偏
+    p_imu->disable_bias_est();     // 是否估计零偏
   if (!exposure_estimate_en)
-    p_imu->disable_exposure_est();  // 是否估计曝光时间
+    p_imu->disable_exposure_est(); // 是否估计曝光时间
 
   // slam 模式设计
   slam_mode_ = (img_en && lidar_en) ? LIVO : imu_en ? ONLY_LIO : ONLY_LO;

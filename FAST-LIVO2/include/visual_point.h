@@ -25,16 +25,16 @@ class VisualPoint : boost::noncopyable
 public:
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 
-  Vector3d pos_;                //!< 3d pos of the point in the world coordinate frame.
-  Vector3d normal_;             //!< Surface normal at point.
-  Matrix3d normal_information_; //!< Inverse covariance matrix of normal estimation.
-  Vector3d previous_normal_;    //!< Last updated normal vector.
-  list<Feature *> obs_;         //!< Reference patches which observe the point.
-  Eigen::Matrix3d covariance_;  //!< Covariance of the point.
-  bool is_converged_;           //!< True if the point is converged.
-  bool is_normal_initialized_;  //!< True if the normal is initialized.
-  bool has_ref_patch_;          //!< True if the point has a reference patch.
-  Feature *ref_patch = nullptr;  //!< Reference patch of the point.
+  Vector3d pos_;                // 视觉点对应在世界坐标系下的三维坐标
+  Vector3d normal_;             // 在三维点的表面法向量
+  Matrix3d normal_information_; // 法向量的信息矩阵，参考 voxelmap 的推理
+  Vector3d previous_normal_;    // 上一个更新的法向量
+  list<Feature *> obs_;         // 不同帧对应该点的观测
+  Eigen::Matrix3d covariance_;  // 该三维点的协方差
+  bool is_converged_;           // 是否收敛
+  bool is_normal_initialized_;  // 法向量是否初始化
+  bool has_ref_patch_;          // 是否存在一个参考图像块
+  Feature *ref_patch = nullptr; // 该点对应的图像块
 
   VisualPoint(const Vector3d &pos);
   ~VisualPoint();

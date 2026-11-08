@@ -36,7 +36,7 @@
 
     time_offset: 
       imu_time_offset: 0.0
-      img_time_offset: -0.1
+      img_time_offset: 0.1
       exposure_time_init: 0.0
     # ╔═══════════════════════════════════════════════════════════════════════════════════════╗
     # ║                     Configuration Settings                                            ║
@@ -113,7 +113,7 @@
       blind_rgb_points: 0.0
 
     evo:
-      seq_name: "HKisland03"
+      seq_name: "HKisland02"
       pose_output_en: false
 
     pcd_save:

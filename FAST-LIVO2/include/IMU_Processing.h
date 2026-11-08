@@ -29,11 +29,15 @@ class ImuProcess
 public:
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 
+  // 默认构造和析构
   ImuProcess();
   ~ImuProcess();
 
+  // 重置
   void Reset();
   void Reset(double start_timestamp, const sensor_msgs::msg::Imu::ConstSharedPtr &lastimu);
+
+  // 设置
   void set_extrinsic(const V3D &transl, const M3D &rot);
   void set_extrinsic(const V3D &transl);
   void set_extrinsic(const MD(4, 4) & T);
@@ -43,11 +47,17 @@ public:
   void set_acc_bias_cov(const V3D &b_a);
   void set_inv_expo_cov(const double &inv_expo);
   void set_imu_init_frame_num(const int &num);
+
+  // 禁止
   void disable_imu();
   void disable_gravity_est();
   void disable_bias_est();
   void disable_exposure_est();
+
+  // imu 前向传播
   void Process2(LidarMeasureGroup &lidar_meas, StatesGroup &stat, PointCloudXYZI::Ptr cur_pcl_un_);
+  
+  // 点云去畸变
   void UndistortPcl(LidarMeasureGroup &lidar_meas, StatesGroup &state_inout, PointCloudXYZI &pcl_out);
 
   ofstream fout_imu;
@@ -67,8 +77,11 @@ public:
   int lidar_type;
 
 private:
+  // imu 初始化，零偏和重力对齐
   void IMU_init(const MeasureGroup &meas, StatesGroup &state, int &N);
   void Forward_without_imu(LidarMeasureGroup &meas, StatesGroup &state_inout, PointCloudXYZI &pcl_out);
+
+
   PointCloudXYZI pcl_wait_proc;
   sensor_msgs::msg::Imu::ConstSharedPtr last_imu;
   PointCloudXYZI::Ptr cur_pcl_un_;
@@ -88,5 +101,6 @@ private:
   bool ba_bg_est_en = true;
   bool exposure_estimate_en = true;
 };
+
 typedef std::shared_ptr<ImuProcess> ImuProcessPtr;
 #endif

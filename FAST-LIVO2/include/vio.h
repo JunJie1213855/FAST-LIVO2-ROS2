@@ -25,13 +25,14 @@ which is included as part of this source code package.
 #include <vikit/vision.h>
 #include <vikit/pinhole_camera.h>
 
+// 
 struct SubSparseMap
 {
   vector<float> propa_errors;
   vector<float> errors;
-  vector<vector<float>> warp_patch;
-  vector<int> search_levels;
-  vector<VisualPoint *> voxel_points;
+  vector<vector<float>> warp_patch; // 覆盖的图像子块
+  vector<int> search_levels;        // 金字塔层级
+  vector<VisualPoint *> voxel_points; //
   vector<double> inv_expo_list;
   vector<pointWithVar> add_from_voxel_map;
 
@@ -61,8 +62,8 @@ struct SubSparseMap
 class Warp
 {
 public:
-  Matrix2d A_cur_ref;
-  int search_level;
+  Matrix2d A_cur_ref; // 参考帧到当前帧的仿射变换矩阵 A
+  int search_level;   // 查找的层级
   Warp(int level, Matrix2d warp_matrix) : search_level(level), A_cur_ref(warp_matrix) {}
   ~Warp() {}
 };
@@ -85,6 +86,8 @@ public:
   }
 };
 
+
+/// @brief VIO 管理类，包括图像块、状态更新
 class VIOManager
 {
 public:
@@ -93,8 +96,12 @@ public:
   vk::PinholeCamera *pinhole_cam = nullptr;
   StatesGroup *state;
   StatesGroup *state_propagat;
+  // lidar2imu、cam2imu、cam2lidar、cam2world 的旋转 以及对应的雅可比
   M3D Rli, Rci, Rcl, Rcw, Jdphi_dR, Jdp_dt, Jdp_dR;
+  // lidar2imu、cam2imu、cam2lidar、cam2world 的平移
   V3D Pli, Pci, Pcl, Pcw;
+
+  // 网格数量
   vector<int> grid_num;
   vector<int> map_index;
   vector<int> border_flag;
@@ -107,13 +114,20 @@ public:
 
   int width, height, grid_n_width, grid_n_height, length;
   double image_resize_factor;
+  // 相机内参，包括焦距 fx/fy 和相机中心 cx/cy
   double fx, fy, cx, cy;
+  // 金字塔层级、图像块大小、图像块数量
   int patch_pyrimid_level, patch_size, patch_size_total, patch_size_half, border, warp_len;
+
+  // 状态更新最大迭代次数、全部点云数量
   int max_iterations, total_points;
 
+  // 图像点方差、外点阈值、ncc 阈值
   double img_point_cov, outlier_threshold, ncc_thre;
 
+  // 视觉子图
   std::unique_ptr<SubSparseMap> visual_submap;
+  // 采样点的射线参数
   std::vector<std::vector<V3D>> rays_with_sample_points;
 
   double compute_jacobian_time, update_ekf_time;
@@ -128,12 +142,30 @@ public:
   Eigen::MatrixXd K, H_sub_inv;
 
   ofstream fout_camera, fout_colmap;
-  unordered_map<VOXEL_LOCATION, std::unique_ptr<VOXEL_POINTS>> feat_map;
+  // 特征点哈希表
+  // 跨帧累积、持续维护的视觉三维点体素地图。
+  // 体素里存的是 VisualPoint，每个点关联历史图像观测 Feature。
+  // 它不会永久保留所有历史数据，pruneVisualMap() 会清理旧数据。
+  unordered_map<VOXEL_LOCATION, std::unique_ptr<VOXEL_POINTS>> feat_map; 
+  
+  
+  // 子图特征点哈希表
+  // 本帧的候选体素索引集合。
+  // 它主要根据本次激光点 pg 建立，用于去 feat_map 中查找历史视觉点，本身不保存地图点或图像。
   unordered_map<VOXEL_LOCATION, int> sub_feat_map;
+
+  //
   unordered_map<int, Warp> warp_map;
+
+  // 检索到的体素三维点
   vector<VisualPoint *> retrieve_voxel_points;
+
+  // 插入的体素三维点
   vector<pointWithVar> append_voxel_points;
+
+  // 新帧
   FramePtr new_frame_;
+  // 图像
   cv::Mat img_cp, img_rgb, img_test;
 
   enum CellType
@@ -188,6 +220,7 @@ public:
   V3F getInterpolatedPixel(cv::Mat img, V2D pc);
 
 private:
+  // 相机，用于映射
   std::unique_ptr<vk::AbstractCamera> camera_;
 
   // void resetRvizDisplay();

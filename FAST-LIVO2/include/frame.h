@@ -23,6 +23,7 @@ typedef list<Feature *> Features;
 typedef vector<cv::Mat> ImgPyr;
 
 /// A frame saves the image, the associated features and the estimated pose.
+/// 图像帧类，主要是保存当前相机帧的相机类型，以及世界坐标系到当前帧相机坐标系的的转换(包括优化后的和基于 IMU 先验的)
 class Frame : boost::noncopyable
 {
 public:
